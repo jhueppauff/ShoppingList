@@ -1,0 +1,12 @@
+{
+    "bindings": [
+      {
+        "tableName": "ShoppingItems",
+        "connection": "StorageConnectionString",
+        "name": "tableBinding",
+        "type": "table",
+        "direction": "out"
+      }
+    ],
+    "disabled": false
+  }

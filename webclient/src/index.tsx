@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
-const authentication = require('@kdpw/msal-b2c-react');
+import authentication from "./msal/msal-b2c-react";
 //import authentication from '@kdpw/msal-b2c-react';
 
 authentication.initialize({
@@ -12,8 +12,9 @@ authentication.initialize({
     signInPolicy: 'B2C_1_b2s_1_susi',
     applicationId: '739f43a1-d8fe-401e-97bc-3f07525e1292',
     cacheLocation: 'sessionStorage',
-    scopes: ['user_impersonation'],
+    scopes: ['https://shopping.apps.hueppauff.com/access'],
     redirectUri: 'http://localhost:3000',
+    resetPolicy: 'B2C_1_reset',
     postLogoutRedirectUri: window.location.origin,
 });
 

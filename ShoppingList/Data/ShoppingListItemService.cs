@@ -34,6 +34,7 @@ namespace ShoppingList.Data
             string body = JsonConvert.SerializeObject(shoppingItemRequest);
 
             request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
+            request.AddParameter("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
             request.RequestFormat = DataFormat.Json;
 
             try
@@ -68,6 +69,7 @@ namespace ShoppingList.Data
             string body = JsonConvert.SerializeObject(shoppingItemRequest);
 
             request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
+            request.AddParameter("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
             request.RequestFormat = DataFormat.Json;
 
             try

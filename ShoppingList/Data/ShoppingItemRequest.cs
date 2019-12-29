@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace ShoppingList.Data
+﻿namespace ShoppingList.Data
 {
     public class ShoppingItemRequest
     {

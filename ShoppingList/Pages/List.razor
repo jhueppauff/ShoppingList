@@ -1,0 +1,67 @@
+﻿@page "/List/{Name}"
+@using ShoppingList.Data
+@using Shared.Model
+@inject ShoppingListItemService shoppingListItemService
+
+
+@code {
+    [Parameter]
+    public string Name { get; set; }
+}
+
+
+<h3>@Name</h3>
+
+
+@if (shoppingListItems == null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (shoppingListItems.Count == 0)
+{
+    <h4>No items in the list, try adding some :)</h4>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Amount</th>
+                <th>Done</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in shoppingListItems)
+            {
+                <tr>
+                    <td>@item.Name</td>
+                    <td>@item.Amount</td>
+                    <td><input type="checkbox" value=@item.Done/></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private List<Shared.Model.ShoppingListItem> shoppingListItems;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        string user = authState.User.Identity.Name;
+
+        shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name);
+    }
+
+    protected override async Task OnParametersSetAsync() 
+    {
+        this.shoppingListItems = null;
+        await OnInitializedAsync();
+    }
+}

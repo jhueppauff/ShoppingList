@@ -28,13 +28,13 @@ namespace ShoppingList.Data
             };
 
             RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
-            RestRequest request = new RestRequest("/api/CreateShoppingListItem", Method.POST);
+            RestRequest request = new RestRequest("/CreateShoppingListItem", Method.POST);
             var cancellationTokenSource = new CancellationTokenSource();
 
             string body = JsonConvert.SerializeObject(shoppingItemRequest);
 
             request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
-            request.AddParameter("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
+            request.AddHeader("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
             request.RequestFormat = DataFormat.Json;
 
             try
@@ -63,13 +63,13 @@ namespace ShoppingList.Data
             };
 
             RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
-            RestRequest request = new RestRequest("/api/GetShoppingListItems", Method.POST);
+            RestRequest request = new RestRequest("/GetShoppingListItems", Method.POST);
             var cancellationTokenSource = new CancellationTokenSource();
 
             string body = JsonConvert.SerializeObject(shoppingItemRequest);
 
             request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
-            request.AddParameter("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
+            request.AddHeader("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
             request.RequestFormat = DataFormat.Json;
 
             try

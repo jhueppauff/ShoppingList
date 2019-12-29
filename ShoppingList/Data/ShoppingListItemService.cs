@@ -17,6 +17,42 @@ namespace ShoppingList.Data
             this.configuration = configuration;
         }
 
+        public async Task CreateShoppingListItemAsync(string owner, string listName, string itemName, double amout)
+        {
+            ShoppingItemRequest shoppingItemRequest = new ShoppingItemRequest()
+            {
+                Owner = owner,
+                ListName = listName,
+                Amount = amout,
+                Name = itemName
+            };
+
+            RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
+            RestRequest request = new RestRequest("/api/CreateShoppingListItem", Method.POST);
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            string body = JsonConvert.SerializeObject(shoppingItemRequest);
+
+            request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
+            request.RequestFormat = DataFormat.Json;
+
+            try
+            {
+                var result = await client.ExecuteTaskAsync<List<Shared.Model.ShoppingListItem>>(request, cancellationTokenSource.Token, Method.POST).ConfigureAwait(false);
+
+                if (!result.IsSuccessful)
+                {
+                    throw new Exception($"Error while creating the Item - {result.StatusCode} : {result.ErrorMessage}");
+                }
+            }
+            catch (Exception error)
+            {
+                // log.LogError(error.Message);
+                // log.LogDebug(error.StackTrace);
+                throw;
+            }
+        }
+
         public async Task<List<Shared.Model.ShoppingListItem>> GetShoppingListItemsAsync(string owner, string listName)
         {
             ShoppingItemRequest shoppingItemRequest = new ShoppingItemRequest()

@@ -37,31 +37,51 @@ else
                 <tr>
                     <td>@item.Name</td>
                     <td>@item.Amount</td>
-                    <td><input type="checkbox" value=@item.Done/></td>
+                    <td><input type="checkbox" value=@item.Done /></td>
                 </tr>
             }
         </tbody>
     </table>
 }
 
+<div>
+    <input type="text" @bind="itemName" />
+    <input type="number" @bind="amount" />
+    <button @onclick="OnClickItemCreateAsync">Save</button>
+</div>
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    public string itemName { get; set; }
+    public int amount { get; set; }
+    private string user;
 
     private List<Shared.Model.ShoppingListItem> shoppingListItems;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await authenticationStateTask;
-        string user = authState.User.Identity.Name;
+        this.user = authState.User.Identity.Name;
 
         shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name);
     }
 
-    protected override async Task OnParametersSetAsync() 
+    protected override async Task OnParametersSetAsync()
     {
         this.shoppingListItems = null;
         await OnInitializedAsync();
+    }
+
+    private async Task OnClickItemCreateAsync()
+    {
+        await shoppingListItemService.CreateShoppingListItemAsync(user, Name, itemName, Convert.ToDouble(amount));
+
+        shoppingListItems.Add(new ShoppingListItem() { Amount = amount, Name = itemName, PartitionKey = $"{user}-{Name}" });
+
+
+        itemName = string.Empty;
+        amount = 0;
     }
 }

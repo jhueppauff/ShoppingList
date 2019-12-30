@@ -56,7 +56,8 @@ else
 
     public async Task OnButtonDeleteClickAsync(string name)
     {
-
+        await shoppingListService.DeleteListAsync(name, user).ConfigureAwait(false);
+        await OnInitializedAsync().ConfigureAwait(false);
     }
 
     public async Task OnButtonClickAsync()

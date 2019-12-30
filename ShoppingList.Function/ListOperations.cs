@@ -103,9 +103,7 @@ namespace ShoppingList.Function
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList, 
             [Table("ShoppingLists")] CloudTable cloudTable, ILogger log)
         {
-            string partitionKey = Shared.Helper.HashHelper.ConvertToHash(shoppingList.PartitionKey.ToString());
-
-            Shared.Model.ShoppingList list = new Shared.Model.ShoppingList(shoppingList.PartitionKey.ToString(), shoppingList.RowKey.ToString())
+            Shared.Model.ShoppingList list = new Shared.Model.ShoppingList(shoppingList.RowKey.ToString(), shoppingList.PartitionKey.ToString())
             {
                 ETag = "*"
             };

@@ -59,5 +59,40 @@ namespace ShoppingList.Data
                 throw;
             }
         }
+
+        public async Task CreateShoppingListsAsync(string owner, string name)
+        {
+            Shared.Model.ShoppingList shoppingList = new Shared.Model.ShoppingList()
+            {
+                PartitionKey = owner,
+                RowKey = name
+            };
+
+            RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
+            RestRequest request = new RestRequest("/CreateShoppingList", Method.POST);
+            var cancellationTokenSource = new CancellationTokenSource();
+
+            string body = JsonConvert.SerializeObject(shoppingList);
+
+            request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
+            request.AddHeader("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
+            request.RequestFormat = DataFormat.Json;
+
+            try
+            {
+                var result = await client.ExecuteTaskAsync<List<Shared.Model.ShoppingList>>(request, cancellationTokenSource.Token, Method.POST).ConfigureAwait(false);
+
+                if (!result.IsSuccessful)
+                {
+                    throw new Exception($"Error while creating the List : {result.StatusCode} - {result.ErrorMessage}");
+                }
+            }
+            catch (Exception error)
+            {
+                // log.LogError(error.Message);
+                // log.LogDebug(error.StackTrace);
+                throw;
+            }
+        }
     }
 }

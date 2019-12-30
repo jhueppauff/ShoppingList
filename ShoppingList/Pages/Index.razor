@@ -1,5 +1,70 @@
 ﻿@page "/"
+@using ShoppingList.Data
+@using Shared.Model
+@inject ShoppingListService shoppingListService
 
-<h1>Hello, world!</h1>
+<h1>Shopping List!</h1>
+@if (shoppingLists == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+<table class="table">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Created</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in shoppingLists)
+        {
+            <tr>
+                <td>@item.RowKey</td>
+                <td>@item.Created</td>
+                <td><button @onclick="@(e => OnButtonDeleteClickAsync(item.RowKey))">Delete</button></td>
+            </tr>
+        }
+    </tbody>
+</table>
+}
 
-Welcome to your new app.
+<div>
+    <p>Create new List</p>
+    <input placeholder="List Name" @bind="ListName" type="text" />
+    <button @onclick="OnButtonClickAsync">Create</button>
+</div>
+
+@code {
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationStateTask { get; set; }
+
+    private List<Shared.Model.ShoppingList> shoppingLists;
+    private string user;
+
+    public string ListName { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateTask;
+        user = authState.User.Identity.Name;
+
+        shoppingLists = await shoppingListService.GetShoppingListsAsync(user).ConfigureAwait(false);
+    }
+
+    public async Task OnButtonDeleteClickAsync(string name)
+    {
+
+    }
+
+    public async Task OnButtonClickAsync()
+    {
+        await shoppingListService.CreateShoppingListsAsync(user, ListName).ConfigureAwait(false);;
+
+        ListName = string.Empty;
+
+        await OnInitializedAsync().ConfigureAwait(false);
+    }
+}

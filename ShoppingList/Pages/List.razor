@@ -65,21 +65,18 @@ else
         var authState = await authenticationStateTask;
         this.user = authState.User.Identity.Name;
 
-        shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name);
+        shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name).ConfigureAwait(false);;
     }
 
     protected override async Task OnParametersSetAsync()
     {
         this.shoppingListItems = null;
-        await OnInitializedAsync();
+        await OnInitializedAsync().ConfigureAwait(false);;
     }
 
     private async Task OnClickItemCreateAsync()
     {
-        await shoppingListItemService.CreateShoppingListItemAsync(user, Name, itemName, Convert.ToDouble(amount));
-
-        shoppingListItems.Add(new ShoppingListItem() { Amount = amount, Name = itemName, PartitionKey = $"{user}-{Name}" });
-
+        await shoppingListItemService.CreateShoppingListItemAsync(user, Name, itemName, Convert.ToDouble(amount)).ConfigureAwait(false);
 
         itemName = string.Empty;
         amount = 0;

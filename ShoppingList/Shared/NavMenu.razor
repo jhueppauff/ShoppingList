@@ -12,7 +12,7 @@
         var authState = await authenticationStateTask;
         string user = authState.User.Identity.Name;
 
-        shoppingLists = await shoppingListsService.GetShoppingListsAsync(user);
+        shoppingLists = await shoppingListsService.GetShoppingListsAsync(user).ConfigureAwait(false);;
     }
 }
 

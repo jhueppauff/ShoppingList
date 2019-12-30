@@ -5,6 +5,9 @@ using Microsoft.Azure.WebJobs.Extensions.Http;
 using System.Collections.Generic;
 using Microsoft.WindowsAzure.Storage.Table;
 using Microsoft.Extensions.Logging;
+using Microsoft.Azure.ServiceBus;
+using System.Text;
+using Newtonsoft.Json;
 
 namespace ShoppingList.Function
 {
@@ -94,5 +97,45 @@ namespace ShoppingList.Function
             };
         }
 
+        [FunctionName("DeleteShoppingList")]
+        [return: ServiceBus("deleteprocessing", Connection = "ServiceBusConnection")]
+        public static async Task<Message> DeleteShoppingList(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList, 
+            [Table("ShoppingLists")] CloudTable cloudTable, ILogger log)
+        {
+            string partitionKey = Shared.Helper.HashHelper.ConvertToHash(shoppingList.PartitionKey.ToString());
+
+            Shared.Model.ShoppingList list = new Shared.Model.ShoppingList(shoppingList.PartitionKey.ToString(), shoppingList.RowKey.ToString())
+            {
+                ETag = "*"
+            };
+
+            var operation = TableOperation.Delete(list);
+
+            await cloudTable.ExecuteAsync(operation);
+
+            return new Message()
+            {
+                Body = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(list)),
+                ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddDays(1)
+            };
+        }
+
+        [FunctionName("CleanupShoppingItemsOfDeletedLists")]
+        public static async Task CleanupShoppingItemsOfDeletedLists(
+            [ServiceBusTrigger("deleteprocessing", Connection = "ServiceBusConnection")] string item,
+            [Table("ShoppingListItems")] CloudTable cloudTable)
+        {
+            Shared.Model.ShoppingList list = JsonConvert.DeserializeObject<Shared.Model.ShoppingList>(item);
+
+            Shared.Model.ShoppingListItem listItem = new Shared.Model.ShoppingListItem(list.PartitionKey)
+            {
+                RowKey = list.RowKey
+            };
+
+            var operation = TableOperation.Delete(listItem);
+
+            await cloudTable.ExecuteAsync(operation);
+        }
     }
 }

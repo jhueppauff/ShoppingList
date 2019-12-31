@@ -135,5 +135,21 @@ namespace ShoppingList.Function
 
             await cloudTable.ExecuteAsync(operation);
         }
+
+        [FunctionName("CompleteListItem")]
+        public static async Task CompleteListItem(
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
+            [Table("ShoppingListItems")] CloudTable cloudTable)
+        {
+            Shared.Model.ShoppingListItem listItem = new Shared.Model.ShoppingListItem($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}", shoppingListItem.Id.ToString())
+            {
+                Modified = DateTime.UtcNow,
+                Done = Convert.ToBoolean(shoppingListItem.Completed.ToString()),
+                ETag = "*"
+            };
+
+            var mergeOperation = TableOperation.Merge(listItem);
+            await cloudTable.ExecuteAsync(mergeOperation).ConfigureAwait(false);
+        }
     }
 }

@@ -37,7 +37,7 @@ else
                 <tr>
                     <td>@item.Name</td>
                     <td>@item.Amount</td>
-                    <td><input type="checkbox" value=@item.Done /></td>
+                    <td><input type="checkbox" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                 </tr>
             }
         </tbody>
@@ -80,5 +80,12 @@ else
 
         itemName = string.Empty;
         amount = 0;
+
+        await OnInitializedAsync().ConfigureAwait(false);;
+    }
+
+    private async Task CheckItemAsync(string itemId, bool completed)
+    {
+        await shoppingListItemService.CompleteItemAsync(user, Name, itemId, completed).ConfigureAwait(false);
     }
 }

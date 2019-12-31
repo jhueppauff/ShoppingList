@@ -9,5 +9,9 @@
         public string Owner { get; set; }
 
         public string ListName { get; set; }
+
+        public string Id { get; set; }
+
+        public bool Completed { get; set; }
     }
 }

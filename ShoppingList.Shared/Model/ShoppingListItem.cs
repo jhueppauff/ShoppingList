@@ -6,11 +6,18 @@ namespace ShoppingList.Shared.Model
 {
     public class ShoppingListItem : TableEntity
     {
-        public ShoppingListItem(string owner)
+        public ShoppingListItem(string PartitionKey)
         {
-            this.PartitionKey = HashHelper.ConvertToHash(owner);
+            this.PartitionKey = HashHelper.ConvertToHash(PartitionKey);
 
             this.RowKey = Guid.NewGuid().ToString();
+        }
+
+        public ShoppingListItem(string PartitionKey, string RowKey)
+        {
+            this.PartitionKey = HashHelper.ConvertToHash(PartitionKey);
+
+            this.RowKey = RowKey;
         }
 
         public ShoppingListItem() { }

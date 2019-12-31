@@ -98,5 +98,56 @@ namespace ShoppingList.Data
                 throw;
             }
         }
+
+        public async Task<List<Shared.Model.ShoppingListItem>> CompleteItemAsync(string owner, string listName, string itemId, bool completed)
+        {
+            ShoppingItemRequest shoppingItemRequest = new ShoppingItemRequest()
+            {
+                Owner = owner,
+                ListName = listName,
+                Id = itemId,
+                Completed = completed
+            };
+
+            RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
+
+#if (DEBUG)
+            RestRequest request = new RestRequest("/CompleteListItem", Method.POST);
+#else
+            RestRequest request = new RestRequest("/v1/CompleteListItem", Method.POST);
+#endif
+            var cancellationTokenSource = new CancellationTokenSource();
+            string body = JsonConvert.SerializeObject(shoppingItemRequest);
+
+            request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
+            request.AddHeader("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
+            request.RequestFormat = DataFormat.Json;
+
+            try
+            {
+                var result = await client.ExecuteTaskAsync<List<Shared.Model.ShoppingListItem>>(request, cancellationTokenSource.Token, Method.POST).ConfigureAwait(false);
+
+                if (!result.IsSuccessful)
+                {
+                    // log.LogError($"Rest Request wasn't successful: {result.ErrorMessage}");
+                    return new List<Shared.Model.ShoppingListItem>()
+                    {
+                        new Shared.Model.ShoppingListItem()
+                        {
+                            PartitionKey = "Error",
+                            RowKey = "1"
+                        }
+                    };
+                }
+
+                return result.Data;
+            }
+            catch (Exception error)
+            {
+                // log.LogError(error.Message);
+                // log.LogDebug(error.StackTrace);
+                throw;
+            }
+        }
     }
 }

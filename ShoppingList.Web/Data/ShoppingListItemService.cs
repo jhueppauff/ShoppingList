@@ -164,7 +164,7 @@ namespace ShoppingList.Data
 #if (DEBUG)
             RestRequest request = new RestRequest("/DeleteShoppingListItem", Method.POST);
 #else
-            RestRequest request = new RestRequest("/v1/DeleteListItem", Method.POST);
+            RestRequest request = new RestRequest("/v1/DeleteShoppingListItem", Method.POST);
 #endif
             var cancellationTokenSource = new CancellationTokenSource();
             string body = JsonConvert.SerializeObject(shoppingItemRequest);

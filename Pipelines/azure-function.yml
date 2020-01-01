@@ -1,20 +1,29 @@
-# ASP.NET Core
-# Build and test ASP.NET Core projects targeting .NET Core.
-# Add steps that run tests, create a NuGet package, deploy, and more:
-# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+# .NET Core Function App to Windows on Azure
+# Build a .NET Core function app and deploy it to Azure as a Windows function App.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/en-us/azure/devops/pipelines/languages/dotnet-core
 
 trigger:
-- master
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - readme.md
+    - ShoppingList.Web/*
 
 variables:
- # Azure Resource Manager connection created during pipeline creation
+  # Azure Resource Manager connection created during pipeline creation
   azureSubscription: '4a054209-2e8e-4e48-87b6-21268755f5bc'
-# Agent VM image name
+
+  # Function app name
+  functionAppName: 'weshoppinglist-fa'
+
+  # Agent VM image name
   vmImageName: 'vs2017-win2016'
-  buildConfiguration: 'Release'
 
   # Working Directory
-  workingDirectory: '$(Build.Repository.LocalPath)/ShoppingList'
+  workingDirectory: '$(Build.Repository.LocalPath)/ShoppingList.Function'
 
 stages:
 - stage: Build
@@ -27,11 +36,6 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
-    - task: DotNetCoreInstaller@0
-      displayName: 'Installing .NET Core SDK...'
-      inputs:
-        version:  3.1.100
-
     - task: DotNetCoreCLI@2
       displayName: Build
       inputs:
@@ -52,7 +56,6 @@ stages:
     - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
       artifact: drop
 
-
 - stage: Deploy
   displayName: Deploy stage
   dependsOn: Build
@@ -70,12 +73,10 @@ stages:
         deploy:
 
           steps:
-          - task: AzureRmWebAppDeployment@4
+          - task: AzureFunctionApp@1
+            displayName: 'Azure functions app deploy'
             inputs:
-              ConnectionType: 'AzureRM'
-              azureSubscription: 'Internal-PAYG (ff07fd4c-b91a-41b5-ae0f-d7d28e818cb3)'
-              appType: 'webAppLinux'
-              WebAppName: 'weshoppinglistweb'
-              packageForLinux: '$(workingDirectory)/**/*.zip'
-              RuntimeStack: 'DOTNETCORE|Latest'
-              StartupCommand: 'dotnet /home/site/wwwroot/ShoppingList.dll'
+              azureSubscription: '$(azureSubscription)'
+              appType: functionApp
+              appName: $(functionAppName)
+              package: '$(Pipeline.Workspace)/drop/$(Build.BuildId).zip'

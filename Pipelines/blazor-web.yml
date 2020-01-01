@@ -1,10 +1,87 @@
-trigger:
-- master
+# ASP.NET Core
+# Build and test ASP.NET Core projects targeting .NET Core.
+# Add steps that run tests, create a NuGet package, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
 
-pool:
-  vmImage: 'vs2017-win2016'
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    exclude:
+    - readme.md
+    - ShoppingList.Function/*
 
 variables:
+ # Azure Resource Manager connection created during pipeline creation
+  azureSubscription: '4a054209-2e8e-4e48-87b6-21268755f5bc'
+# Agent VM image name
+  vmImageName: 'vs2017-win2016'
   buildConfiguration: 'Release'
 
-steps:
+  # Working Directory
+  workingDirectory: '$(Build.Repository.LocalPath)/ShoppingList.Web'
+
+stages:
+- stage: Build
+  displayName: Build stage
+
+  jobs:
+  - job: Build
+    displayName: Build
+    pool:
+      vmImage: $(vmImageName)
+
+    steps:
+    - task: DotNetCoreInstaller@0
+      displayName: 'Installing .NET Core SDK...'
+      inputs:
+        version:  3.1.100
+
+    - task: DotNetCoreCLI@2
+      displayName: Build
+      inputs:
+        command: 'build'
+        projects: |
+          $(workingDirectory)/*.csproj
+        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+
+    - task: ArchiveFiles@2
+      displayName: 'Archive files'
+      inputs:
+        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
+        includeRootFolder: false
+        archiveType: zip
+        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+        replaceExistingArchive: true
+
+    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+      artifact: drop
+
+
+- stage: Deploy
+  displayName: Deploy stage
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+  - deployment: Deploy
+    displayName: Deploy
+    environment: 'development'
+    pool:
+      vmImage: $(vmImageName)
+
+    strategy:
+      runOnce:
+        deploy:
+
+          steps:
+          - task: AzureRmWebAppDeployment@4
+            inputs:
+              ConnectionType: 'AzureRM'
+              azureSubscription: 'Internal-PAYG (ff07fd4c-b91a-41b5-ae0f-d7d28e818cb3)'
+              appType: 'webAppLinux'
+              WebAppName: 'weshoppinglistweb'
+              packageForLinux: '$(workingDirectory)/**/*.zip'
+              RuntimeStack: 'DOTNETCORE|Latest'
+              StartupCommand: 'dotnet /home/site/wwwroot/ShoppingList.dll'

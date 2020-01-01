@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList", "ShoppingList\ShoppingList.csproj", "{7D5CFCBD-F0D1-46D0-8F3F-D90C67C2614D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList", "ShoppingList.Web\ShoppingList.csproj", "{7D5CFCBD-F0D1-46D0-8F3F-D90C67C2614D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList.Function", "ShoppingList.Function\ShoppingList.Function.csproj", "{EAA8A916-E695-47EF-96C6-95F7F63FF20A}"
 EndProject

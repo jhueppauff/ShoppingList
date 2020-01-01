@@ -166,8 +166,10 @@ namespace ShoppingList.Function
         public static async Task DeleteListItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
             [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
-            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString());
-            entity.ETag = "*";
+            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString())
+            {
+                ETag = "*"
+            };
 
             var deleteOperation = TableOperation.Delete(entity);
 

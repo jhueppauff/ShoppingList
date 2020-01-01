@@ -11,6 +11,7 @@ trigger:
     exclude:
     - readme.md
     - ShoppingList.Function/*
+    - Pipelines/azure-function.yml
 
 variables:
  # Azure Resource Manager connection created during pipeline creation
@@ -33,10 +34,17 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
-    - task: DotNetCoreInstaller@0
+    - task: DotNetCoreInstaller@1
       displayName: 'Installing .NET Core SDK...'
       inputs:
         version:  3.1.100
+
+    - task: DotNetCoreCli@2
+      displayName: restore
+      inputs:
+        command: 'restore'
+        projects: |
+          $(workingDirectory)/*.csproj
 
     - task: DotNetCoreCLI@2
       displayName: Build
@@ -44,19 +52,20 @@ stages:
         command: 'build'
         projects: |
           $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+        arguments: --configuration $(buildConfiguration)
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
+    - task: DotNetCoreCLI@2
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
+        command: publish
+        publishWebProjects: True
+        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: True
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
+
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: '$(Build.ArtifactStagingDirectory)' 
+        artifactName: 'drop'
 
 
 - stage: Deploy
@@ -82,6 +91,6 @@ stages:
               azureSubscription: 'Internal-PAYG (ff07fd4c-b91a-41b5-ae0f-d7d28e818cb3)'
               appType: 'webAppLinux'
               WebAppName: 'weshoppinglistweb'
-              packageForLinux: '$(workingDirectory)/**/*.zip'
+              packageForLinux: '$(System.DefaultWorkingDirectory)/**/*.zip'
               RuntimeStack: 'DOTNETCORE|Latest'
               StartupCommand: 'dotnet /home/site/wwwroot/ShoppingList.dll'

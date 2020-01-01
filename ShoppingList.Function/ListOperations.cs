@@ -122,20 +122,15 @@ namespace ShoppingList.Function
 
         [FunctionName("CleanupShoppingItemsOfDeletedLists")]
         public static async Task CleanupShoppingItemsOfDeletedLists(
-            [ServiceBusTrigger("deleteprocessing", Connection = "ServiceBusConnection")] string item,
+            [ServiceBusTrigger("deleteprocessing", Connection = "ServiceBusConnection")] dynamic shoppingList,
             [Table("ShoppingListItems")] CloudTable cloudTable)
         {
-            Shared.Model.ShoppingList list = JsonConvert.DeserializeObject<Shared.Model.ShoppingList>(item);
+            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingList.Owner.ToString()}-{shoppingList.ListName.ToString()}"), shoppingList.Id.ToString());
+            entity.ETag = "*";
 
-            Shared.Model.ShoppingListItem listItem = new Shared.Model.ShoppingListItem(list.PartitionKey)
-            {
-                RowKey = list.RowKey,
-                ETag = "*"
-            };
+            var operation = TableOperation.Delete(entity);
 
-            var operation = TableOperation.Delete(listItem);
-
-            await cloudTable.ExecuteAsync(operation);
+            await cloudTable.ExecuteAsync(operation).ConfigureAwait(false);
         }
 
         [FunctionName("CompleteListItem")]

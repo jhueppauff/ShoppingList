@@ -62,9 +62,9 @@ stages:
         zipAfterPublish: True
 
 
-    - task: PublishBuildArtifacts@1
+    - task: PublishPipelineArtifact@1
       inputs:
-        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        targetPath: '$(Build.ArtifactStagingDirectory)' 
         artifactName: 'drop'
 
 

@@ -38,25 +38,33 @@ stages:
       inputs:
         version:  3.1.100
 
+    - task: DotNetCoreCli@2
+      displayName: restore
+      inputs:
+        command: 'restore'
+        projects: |
+          $(workingDirectory)/*.csproj
+
     - task: DotNetCoreCLI@2
       displayName: Build
       inputs:
         command: 'build'
         projects: |
           $(workingDirectory)/*.csproj
-        arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+        arguments: --configuration $(buildConfiguration)
 
-    - task: ArchiveFiles@2
-      displayName: 'Archive files'
+    - task: DotNetCoreCLI@2
       inputs:
-        rootFolderOrFile: '$(System.DefaultWorkingDirectory)/publish_output'
-        includeRootFolder: false
-        archiveType: zip
-        archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-        replaceExistingArchive: true
+        command: publish
+        publishWebProjects: True
+        arguments: '--configuration $(BuildConfiguration) --output $(Build.ArtifactStagingDirectory)'
+        zipAfterPublish: True
 
-    - publish: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
-      artifact: drop
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathtoPublish: '$(Build.ArtifactStagingDirectory)' 
+        artifactName: 'drop'
 
 
 - stage: Deploy

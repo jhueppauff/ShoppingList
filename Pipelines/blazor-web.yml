@@ -91,6 +91,6 @@ stages:
               azureSubscription: 'Internal-PAYG (ff07fd4c-b91a-41b5-ae0f-d7d28e818cb3)'
               appType: 'webAppLinux'
               WebAppName: 'weshoppinglistweb'
-              packageForLinux: '$(workingDirectory)/*.zip'
+              packageForLinux: '$(System.DefaultWorkingDirectory)/*.zip'
               RuntimeStack: 'DOTNETCORE|Latest'
               StartupCommand: 'dotnet /home/site/wwwroot/ShoppingList.dll'

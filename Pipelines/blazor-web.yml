@@ -33,7 +33,7 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
-    - task: DotNetCoreInstaller@0
+    - task: DotNetCoreInstaller@1
       displayName: 'Installing .NET Core SDK...'
       inputs:
         version:  3.1.100

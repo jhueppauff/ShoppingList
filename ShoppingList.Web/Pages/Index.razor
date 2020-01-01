@@ -22,7 +22,7 @@ else
         @foreach (var item in shoppingLists)
         {
             <tr>
-                <td>@item.RowKey</td>
+                <td><a href=@($"/List/{item.RowKey}") Match="NavLinkMatch.All">@item.RowKey</a></td>
                 <td>@item.Created</td>
                 <td><button @onclick="@(e => OnButtonDeleteClickAsync(item.RowKey))">Delete</button></td>
             </tr>

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Azure.ServiceBus;
 using System.Text;
 using Newtonsoft.Json;
+using Microsoft.WindowsAzure.Storage;
 
 namespace ShoppingList.Function
 {
@@ -101,7 +102,7 @@ namespace ShoppingList.Function
         [return: ServiceBus("deleteprocessing", Connection = "ServiceBusConnection")]
         public static async Task<Message> DeleteShoppingList(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList, 
-            [Table("ShoppingLists")] CloudTable cloudTable, ILogger log)
+            [Table("ShoppingLists")] CloudTable cloudTable)
         {
             Shared.Model.ShoppingList list = new Shared.Model.ShoppingList(shoppingList.RowKey.ToString(), shoppingList.PartitionKey.ToString())
             {
@@ -141,15 +142,45 @@ namespace ShoppingList.Function
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
             [Table("ShoppingListItems")] CloudTable cloudTable)
         {
-            Shared.Model.ShoppingListItem listItem = new Shared.Model.ShoppingListItem($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}", shoppingListItem.Id.ToString())
-            {
-                Modified = DateTime.UtcNow,
-                Done = Convert.ToBoolean(shoppingListItem.Completed.ToString()),
-                ETag = "*"
-            };
+            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString());
+            entity.Properties.Add("Done", new EntityProperty(Convert.ToBoolean(shoppingListItem.Completed)));
+            entity.Properties.Add("Modified", new EntityProperty(DateTime.UtcNow));
+            entity.ETag = "*";
 
-            var mergeOperation = TableOperation.Merge(listItem);
-            await cloudTable.ExecuteAsync(mergeOperation).ConfigureAwait(false);
+            var mergeOperation = TableOperation.Merge(entity);
+
+            try
+            {
+                await cloudTable.ExecuteAsync(mergeOperation).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+
+                throw;
+            }
+
+            
         }
+
+        [FunctionName("DeleteListItem")]
+        public static async Task DeleteListItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
+            [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
+        {
+            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString());
+            entity.ETag = "*";
+
+            var deleteOperation = TableOperation.Delete(entity);
+
+            try
+            {
+                await cloudTable.ExecuteAsync(deleteOperation).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+                log.LogWarning(ex.RequestInformation.ExtendedErrorInformation.ErrorMessage);
+                throw;
+            }
+        }
+
     }
 }

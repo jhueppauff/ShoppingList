@@ -129,7 +129,8 @@ namespace ShoppingList.Function
 
             Shared.Model.ShoppingListItem listItem = new Shared.Model.ShoppingListItem(list.PartitionKey)
             {
-                RowKey = list.RowKey
+                RowKey = list.RowKey,
+                ETag = "*"
             };
 
             var operation = TableOperation.Delete(listItem);

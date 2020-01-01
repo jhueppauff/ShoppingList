@@ -162,8 +162,8 @@ namespace ShoppingList.Function
             
         }
 
-        [FunctionName("DeleteListItem")]
-        public static async Task DeleteListItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
+        [FunctionName("DeleteShoppingListItem")]
+        public static async Task DeleteShoppingListItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
             [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
             var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString())

@@ -162,7 +162,7 @@ namespace ShoppingList.Data
             RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);
 
 #if (DEBUG)
-            RestRequest request = new RestRequest("/DeleteListItem", Method.POST);
+            RestRequest request = new RestRequest("/DeleteShoppingListItem", Method.POST);
 #else
             RestRequest request = new RestRequest("/v1/DeleteListItem", Method.POST);
 #endif

@@ -204,11 +204,10 @@ namespace ShoppingList.Function
             }
             #endregion
 
-            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingList.Owner.ToString()}-{shoppingList.ListName.ToString()}"), shoppingList.Id.ToString())
+            var entity = new DynamicTableEntity(shoppingList.PartitionKey.ToString(), shoppingList.RowKey.ToString())
             {
                 ETag = "*"
             };
-
 
             try
             {

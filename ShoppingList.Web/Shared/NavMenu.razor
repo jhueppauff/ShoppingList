@@ -1,16 +1,25 @@
 ﻿@using ShoppingList.Data
 @inject ShoppingListService shoppingListsService
+@inject ConfigurationService configurationService
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
-
+    private string user;
     private List<Shared.Model.ShoppingList> shoppingLists;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await authenticationStateTask;
-        string user = authState.User.Identity.Name;
+        
+        if (configurationService.AuthenticationMode() == "AAD")
+        {
+            user = authState.User.Identity.Name;
+        }
+        else if (configurationService.AuthenticationMode() == "B2C")
+        {
+            user = authState.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+        }
 
         shoppingLists = await shoppingListsService.GetShoppingListsAsync(user).ConfigureAwait(false);;
     }

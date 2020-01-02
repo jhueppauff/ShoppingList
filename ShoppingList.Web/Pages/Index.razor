@@ -2,6 +2,7 @@
 @using ShoppingList.Data
 @using Shared.Model
 @inject ShoppingListService shoppingListService
+@inject ConfigurationService configurationService
 
 <h1>Shopping List!</h1>
 @if (shoppingLists == null)
@@ -10,25 +11,25 @@
 }
 else
 {
-<table class="table">
-    <thead>
-        <tr>
-            <th>Name</th>
-            <th>Created</th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-        @foreach (var item in shoppingLists)
-        {
+    <table class="table">
+        <thead>
             <tr>
-                <td><a href=@($"/List/{item.RowKey}") Match="NavLinkMatch.All">@item.RowKey</a></td>
-                <td>@item.Created</td>
-                <td><button @onclick="@(e => OnButtonDeleteClickAsync(item.RowKey))">Delete</button></td>
+                <th>Name</th>
+                <th>Created</th>
+                <th></th>
             </tr>
-        }
-    </tbody>
-</table>
+        </thead>
+        <tbody>
+            @foreach (var item in shoppingLists)
+            {
+                <tr>
+                    <td><a href=@($"/List/{item.RowKey}") Match="NavLinkMatch.All">@item.RowKey</a></td>
+                    <td>@item.Created</td>
+                    <td><button @onclick="@(e => OnButtonDeleteClickAsync(item.RowKey))">Delete</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
 }
 
 <div>
@@ -50,7 +51,16 @@ else
     protected override async Task OnInitializedAsync()
     {
         var authState = await authenticationStateTask;
-        user = authState.User.Identity.Name;
+
+        if (configurationService.AuthenticationMode() == "AAD")
+        {
+            user = authState.User.Identity.Name;
+        }
+        else if (configurationService.AuthenticationMode() == "B2C")
+        {
+            
+            user = authState.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+        }
 
         shoppingLists = await shoppingListService.GetShoppingListsAsync(user, cacheId).ConfigureAwait(false);
     }
@@ -64,7 +74,7 @@ else
 
     public async Task OnButtonClickAsync()
     {
-        await shoppingListService.CreateShoppingListsAsync(user, ListName).ConfigureAwait(false);;
+        await shoppingListService.CreateShoppingListsAsync(user, ListName).ConfigureAwait(false); ;
 
         ListName = string.Empty;
         cacheId = Guid.NewGuid().ToString();

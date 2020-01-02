@@ -1,9 +1,50 @@
-﻿<AuthorizeView>
-    <Authorized>
-        Hello, @context.User.Identity.Name!
-        <a href="AzureAD/Account/SignOut">Log out</a>
-    </Authorized>
-    <NotAuthorized>
-        <a href="AzureAD/Account/SignIn">Log in</a>
-    </NotAuthorized>
-</AuthorizeView>
+﻿@inject ShoppingList.Data.ConfigurationService configurationService
+
+@if (configurationService.AuthenticationMode() == "AAD")
+{
+    <AuthorizeView>
+        <Authorized>
+            Hello, @context.User.Identity.Name!
+            <a href="AzureAD/Account/SignOut">Log out</a>
+        </Authorized>
+        <NotAuthorized>
+            <a href="AzureAD/Account/SignIn">Log in</a>
+        </NotAuthorized>
+    </AuthorizeView>
+}
+else if (configurationService.AuthenticationMode() == "B2C")
+{
+    @using Microsoft.AspNetCore.Authentication.AzureADB2C.UI
+    @using Microsoft.Extensions.Options
+    @inject IOptionsMonitor<AzureADB2COptions> AzureADB2COptions
+
+    <AuthorizeView>
+        <Authorized>
+            @if (canEditProfile)
+            {
+                <a href="AzureADB2C/Account/EditProfile">Hello, @context.User.Identity.Name!</a>
+            }
+            else
+            {
+                <text>Hello, @context.User.Identity.Name!</text>
+            }
+            <a href="AzureADB2C/Account/SignOut">Log out</a>
+        </Authorized>
+        <NotAuthorized>
+            <a href="AzureADB2C/Account/SignIn">Log in</a>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    @code {
+        private bool canEditProfile;
+
+        protected override void OnInitialized()
+        {
+            var options = AzureADB2COptions.Get(AzureADB2CDefaults.AuthenticationScheme);
+            canEditProfile = !string.IsNullOrEmpty(options.EditProfilePolicyId);
+        }
+    }
+}
+
+
+

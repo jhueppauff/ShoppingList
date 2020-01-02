@@ -2,7 +2,7 @@
 @using ShoppingList.Data
 @using Shared.Model
 @inject ShoppingListItemService shoppingListItemService
-
+@inject ConfigurationService configurationService
 
 @code {
     [Parameter]
@@ -44,7 +44,7 @@ else
                     }
                     else
                     {
-                    <td><input type="checkbox" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
+                        <td><input type="checkbox" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                     }
                     <td><button @onclick="@(e => DeleteItemAsync(item.RowKey))">Delete</button></td>
                 </tr>
@@ -72,7 +72,15 @@ else
     protected override async Task OnInitializedAsync()
     {
         var authState = await authenticationStateTask;
-        this.user = authState.User.Identity.Name;
+
+        if (configurationService.AuthenticationMode() == "AAD")
+        {
+            user = authState.User.Identity.Name;
+        }
+        else if (configurationService.AuthenticationMode() == "B2C")
+        {
+            user = authState.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+        }
 
         shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name).ConfigureAwait(false);
     }

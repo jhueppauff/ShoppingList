@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.AzureAD.UI;
+using Microsoft.AspNetCore.Authentication.AzureADB2C.UI;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -32,8 +35,16 @@ namespace ShoppingList
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
-                .AddAzureAD(options => Configuration.Bind("AzureAd", options));
+            if (Configuration.GetSection("AuthenticationMode").Value == "AAD")
+            {
+                services.AddAuthentication(AzureADDefaults.AuthenticationScheme)
+                .AddAzureAD(options => Configuration.Bind("Authentication:AzureAd", options));
+            }
+            else if (Configuration.GetSection("AuthenticationMode").Value == "B2C")
+            {
+                services.AddAuthentication(AzureADB2CDefaults.AuthenticationScheme)
+                .AddAzureADB2C(options => Configuration.Bind("Authentication:AzureAdB2C", options));
+            }
 
             services.AddControllersWithViews(options =>
             {
@@ -43,6 +54,7 @@ namespace ShoppingList
                 options.Filters.Add(new AuthorizeFilter(policy));
             });
 
+
             services.AddSignalR().AddAzureSignalR(options =>
             {
                 options.ServerStickyMode =
@@ -51,9 +63,11 @@ namespace ShoppingList
 
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            
+
             services.AddSingleton<ShoppingListItemService>();
             services.AddSingleton<ShoppingListService>();
+            services.AddSingleton<ConfigurationService>();
+
             services.AddApplicationInsightsTelemetry();
         }
 

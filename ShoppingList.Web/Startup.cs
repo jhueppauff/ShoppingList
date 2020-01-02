@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using ShoppingList.Data;
+using System.Collections.Generic;
 
 namespace ShoppingList
 {
@@ -69,6 +71,18 @@ namespace ShoppingList
             services.AddSingleton<ConfigurationService>();
 
             services.AddApplicationInsightsTelemetry();
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+
+                // Put your front door FQDN here and any other hosts that will send headers you want respected
+                options.AllowedHosts = new List<string>() { "shoppinglist.azurefd.net", "shoppinglist.apps.hueppauff.com", "weshoppinglistweb.azurewebsites.net" };
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

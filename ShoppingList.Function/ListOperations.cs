@@ -204,16 +204,22 @@ namespace ShoppingList.Function
             }
             #endregion
 
-            var entity = new DynamicTableEntity(shoppingList.PartitionKey.ToString(), shoppingList.RowKey.ToString())
+            TableQuery<Shared.Model.ShoppingListItem> rangeQuery = new TableQuery<Shared.Model.ShoppingListItem>().Where(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, shoppingList.PartitionKey.ToString()));
+            List<Shared.Model.ShoppingListItem> items = new List<Shared.Model.ShoppingListItem>();
+            TableContinuationToken continuationToken = null;
+
+            foreach (var item in await cloudTable.ExecuteQuerySegmentedAsync(rangeQuery, continuationToken).ConfigureAwait(false))
             {
-                ETag = "*"
-            };
+                items.Add(item);                
+            }
+
+            TableBatchOperation tableBatchOperation = new TableBatchOperation();
+            items.ForEach(x => tableBatchOperation.Add(TableOperation.Delete(x)));
 
             try
             {
-                var operation = TableOperation.Delete(entity);
-
-                _ = await cloudTable.ExecuteAsync(operation).ConfigureAwait(false);
+                _ = await cloudTable.ExecuteBatchAsync(tableBatchOperation).ConfigureAwait(false);
             }
             catch (StorageException ex)
             {

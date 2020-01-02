@@ -17,7 +17,7 @@ namespace ShoppingList.Data
             this.configuration = configuration;
         }
 
-        public async Task<List<Shared.Model.ShoppingList>> GetShoppingListsAsync(string owner)
+        public async Task<List<Shared.Model.ShoppingList>> GetShoppingListsAsync(string owner, string cacheVersion = null)
         {
             Shared.Model.ShoppingList shoppingList = new Shared.Model.ShoppingList()
             {
@@ -32,6 +32,12 @@ namespace ShoppingList.Data
 
             request.AddParameter("application/json; charset=utf-8", body, ParameterType.RequestBody);
             request.AddHeader("Ocp-Apim-Subscription-Key", configuration.GetSection("APIKey").Value);
+
+            if (cacheVersion != null)
+            {
+                request.AddHeader("cacheId", cacheVersion);
+            }
+
             request.RequestFormat = DataFormat.Json;
 
             try

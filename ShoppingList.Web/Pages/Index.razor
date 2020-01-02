@@ -43,6 +43,7 @@ else
 
     private List<Shared.Model.ShoppingList> shoppingLists;
     private string user;
+    private string cacheId;
 
     public string ListName { get; set; }
 
@@ -51,13 +52,14 @@ else
         var authState = await authenticationStateTask;
         user = authState.User.Identity.Name;
 
-        shoppingLists = await shoppingListService.GetShoppingListsAsync(user).ConfigureAwait(false);
+        shoppingLists = await shoppingListService.GetShoppingListsAsync(user, cacheId).ConfigureAwait(false);
     }
 
     public async Task OnButtonDeleteClickAsync(string name)
     {
         await shoppingListService.DeleteListAsync(name, user).ConfigureAwait(false);
         await OnInitializedAsync().ConfigureAwait(false);
+        cacheId = Guid.NewGuid().ToString();
     }
 
     public async Task OnButtonClickAsync()
@@ -65,6 +67,7 @@ else
         await shoppingListService.CreateShoppingListsAsync(user, ListName).ConfigureAwait(false);;
 
         ListName = string.Empty;
+        cacheId = Guid.NewGuid().ToString();
 
         await OnInitializedAsync().ConfigureAwait(false);
     }

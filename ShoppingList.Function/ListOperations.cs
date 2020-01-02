@@ -214,6 +214,12 @@ namespace ShoppingList.Function
                 items.Add(item);                
             }
 
+            // if no items are in the partition, abourt
+            if (items.Count == 0)
+            {
+                return;
+            }
+
             TableBatchOperation tableBatchOperation = new TableBatchOperation();
             items.ForEach(x => tableBatchOperation.Add(TableOperation.Delete(x)));
 

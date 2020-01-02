@@ -19,6 +19,18 @@ namespace ShoppingList.Function
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList,
             [Table("ShoppingLists")] CloudTable cloudTable, ILogger log)
         {
+            #region Null Checks
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+
+            if (shoppingList == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingList));
+            }
+            #endregion
+
             try
             {
                 string partitionKey = Shared.Helper.HashHelper.ConvertToHash(shoppingList.PartitionKey.ToString());
@@ -29,8 +41,7 @@ namespace ShoppingList.Function
                 List<Shared.Model.ShoppingList> lists = new List<Shared.Model.ShoppingList>();
 
                 // Execute the query and loop through the results
-                foreach (var entity in
-                    await cloudTable.ExecuteQuerySegmentedAsync(rangeQuery, null))
+                foreach (var entity in await cloudTable.ExecuteQuerySegmentedAsync(rangeQuery, null).ConfigureAwait(false))
                 {
                     lists.Add(entity);
                 }
@@ -50,15 +61,28 @@ namespace ShoppingList.Function
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
             [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
+            #region Null Checks
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+
+            if (shoppingListItem == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingListItem));
+            }
+            #endregion
+
+
+            string partitionKey = Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}");
+
+            TableQuery<Shared.Model.ShoppingListItem> rangeQuery = new TableQuery<Shared.Model.ShoppingListItem>().Where(
+                TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
+
+            List<Shared.Model.ShoppingListItem> items = new List<Shared.Model.ShoppingListItem>();
+
             try
             {
-                string partitionKey = Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}");
-
-                TableQuery<Shared.Model.ShoppingListItem> rangeQuery = new TableQuery<Shared.Model.ShoppingListItem>().Where(
-                    TableQuery.GenerateFilterCondition("PartitionKey", QueryComparisons.Equal, partitionKey));
-
-                List<Shared.Model.ShoppingListItem> items = new List<Shared.Model.ShoppingListItem>();
-
                 // Execute the query and loop through the results
                 foreach (var entity in await cloudTable.ExecuteQuerySegmentedAsync(rangeQuery, null).ConfigureAwait(false))
                 {
@@ -67,10 +91,14 @@ namespace ShoppingList.Function
 
                 return items;
             }
+            catch (StorageException ex)
+            {
+                log.LogError(ex, $"{Constants.ErrorMessageGetShoppingListItems}{ex.RequestInformation.ExtendedErrorInformation.ErrorMessage}");
+                throw;
+            }
             catch (Exception ex)
             {
-                log.LogError(ex.Message);
-                log.LogDebug(ex.StackTrace);
+                log.LogError(ex, $"{Constants.UnknownError}{ex.Message}");
                 throw;
             }
         }
@@ -80,6 +108,13 @@ namespace ShoppingList.Function
         public static Shared.Model.ShoppingList CreateShoppingList(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList)
         {
+            #region Null Checks
+            if (shoppingList == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingList));
+            }
+            #endregion
+
             return new Shared.Model.ShoppingList(shoppingList.RowKey.ToString(), shoppingList.PartitionKey.ToString()) { Created = DateTime.Now };
         }
 
@@ -88,6 +123,13 @@ namespace ShoppingList.Function
         public static Shared.Model.ShoppingListItem CreateShoppingListItem(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem)
         {
+            #region Null Checks
+            if (shoppingListItem == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingListItem));
+            }
+            #endregion
+
             return new Shared.Model.ShoppingListItem($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}")
             {
                 Name = shoppingListItem.Name.ToString(),
@@ -101,9 +143,21 @@ namespace ShoppingList.Function
         [FunctionName("DeleteShoppingList")]
         [return: ServiceBus("deleteprocessing", Connection = "ServiceBusConnection")]
         public static async Task<Message> DeleteShoppingList(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList, 
-            [Table("ShoppingLists")] CloudTable cloudTable)
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingList,
+            [Table("ShoppingLists")] CloudTable cloudTable, ILogger log)
         {
+            #region Null Checks
+            if (shoppingList == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingList));
+            }
+
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+            #endregion
+
             Shared.Model.ShoppingList list = new Shared.Model.ShoppingList(shoppingList.RowKey.ToString(), shoppingList.PartitionKey.ToString())
             {
                 ETag = "*"
@@ -111,33 +165,86 @@ namespace ShoppingList.Function
 
             var operation = TableOperation.Delete(list);
 
-            await cloudTable.ExecuteAsync(operation);
-
-            return new Message()
+            try
             {
-                Body = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(list)),
-                ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddDays(1)
-            };
+                _ = await cloudTable.ExecuteAsync(operation).ConfigureAwait(false);
+
+                return new Message()
+                {
+                    Body = Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(list)),
+                    ScheduledEnqueueTimeUtc = DateTime.UtcNow.AddDays(1)
+                };
+            }
+            catch (StorageException ex)
+            {
+                log.LogError(ex, $"{Constants.ErrorMessageDeleteAList}{ex.RequestInformation.ExtendedErrorInformation.ErrorMessage}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"{Constants.UnknownError}{ex.Message}");
+                throw;
+            }
         }
 
         [FunctionName("CleanupShoppingItemsOfDeletedLists")]
         public static async Task CleanupShoppingItemsOfDeletedLists(
             [ServiceBusTrigger("deleteprocessing", Connection = "ServiceBusConnection")] dynamic shoppingList,
-            [Table("ShoppingListItems")] CloudTable cloudTable)
+            [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
-            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingList.Owner.ToString()}-{shoppingList.ListName.ToString()}"), shoppingList.Id.ToString());
-            entity.ETag = "*";
+            #region Null Checks
+            if (shoppingList == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingList));
+            }
 
-            var operation = TableOperation.Delete(entity);
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+            #endregion
 
-            await cloudTable.ExecuteAsync(operation).ConfigureAwait(false);
+            var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingList.Owner.ToString()}-{shoppingList.ListName.ToString()}"), shoppingList.Id.ToString())
+            {
+                ETag = "*"
+            };
+
+
+            try
+            {
+                var operation = TableOperation.Delete(entity);
+
+                _ = await cloudTable.ExecuteAsync(operation).ConfigureAwait(false);
+            }
+            catch (StorageException ex)
+            {
+                log.LogError(ex, $"{Constants.ErrorMessageDeleteAListItem}{ex.RequestInformation.ExtendedErrorInformation.ErrorMessage}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"{Constants.UnknownError}{ex.Message}");
+                throw;
+            }
         }
 
         [FunctionName("CompleteListItem")]
         public static async Task CompleteListItem(
             [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
-            [Table("ShoppingListItems")] CloudTable cloudTable)
+            [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
+            #region Null Checks
+            if (shoppingListItem == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingListItem));
+            }
+
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+            #endregion
+
             var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString());
             entity.Properties.Add("Done", new EntityProperty(Convert.ToBoolean(shoppingListItem.Completed)));
             entity.Properties.Add("Modified", new EntityProperty(DateTime.UtcNow));
@@ -151,17 +258,32 @@ namespace ShoppingList.Function
             }
             catch (StorageException ex)
             {
-
+                log.LogError(ex, $"{Constants.ErrorMessageCompletingAnItem}{ex.RequestInformation.ExtendedErrorInformation.ErrorMessage}");
                 throw;
             }
-
-            
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"{Constants.UnknownError}{ex.Message}");
+                throw;
+            }
         }
 
         [FunctionName("DeleteShoppingListItem")]
         public static async Task DeleteShoppingListItem([HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] dynamic shoppingListItem,
             [Table("ShoppingListItems")] CloudTable cloudTable, ILogger log)
         {
+            #region Null Checks
+            if (shoppingListItem == null)
+            {
+                throw new ArgumentNullException(nameof(shoppingListItem));
+            }
+
+            if (cloudTable == null)
+            {
+                throw new ArgumentNullException(nameof(cloudTable));
+            }
+            #endregion
+
             var entity = new DynamicTableEntity(Shared.Helper.HashHelper.ConvertToHash($"{shoppingListItem.Owner.ToString()}-{shoppingListItem.ListName.ToString()}"), shoppingListItem.Id.ToString())
             {
                 ETag = "*"
@@ -175,7 +297,12 @@ namespace ShoppingList.Function
             }
             catch (StorageException ex)
             {
-                log.LogWarning(ex.RequestInformation.ExtendedErrorInformation.ErrorMessage);
+                log.LogError(ex, $"{Constants.ErrorMessageDeleteAListItem}{ex.RequestInformation.ExtendedErrorInformation.ErrorMessage}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                log.LogError(ex, $"{Constants.UnknownError}{ex.Message}");
                 throw;
             }
         }

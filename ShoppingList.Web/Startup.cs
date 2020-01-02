@@ -48,6 +48,26 @@ namespace ShoppingList
                 .AddAzureADB2C(options => Configuration.Bind("Authentication:AzureAdB2C", options));
             }
 
+            var overwrites = Configuration.GetSection("HostOverwrites:AllowedDomainName").GetChildren();
+            List<string> list = new List<string>();
+
+            foreach (var item in overwrites)
+            {
+                list.Add(item.Value);
+            }
+
+            services.Configure<ForwardedHeadersOptions>(options =>
+            {
+                options.ForwardedHeaders =
+                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
+
+                options.KnownNetworks.Clear();
+                options.KnownProxies.Clear();
+
+                // Put your front door/CDN FQDN here and any other hosts that will send headers you want respected
+                options.AllowedHosts = list;
+            });
+
             services.AddControllersWithViews(options =>
             {
                 var policy = new AuthorizationPolicyBuilder()
@@ -71,18 +91,6 @@ namespace ShoppingList
             services.AddSingleton<ConfigurationService>();
 
             services.AddApplicationInsightsTelemetry();
-
-            services.Configure<ForwardedHeadersOptions>(options =>
-            {
-                options.ForwardedHeaders =
-                    ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto | ForwardedHeaders.XForwardedHost;
-
-                options.KnownNetworks.Clear();
-                options.KnownProxies.Clear();
-
-                // Put your front door FQDN here and any other hosts that will send headers you want respected
-                options.AllowedHosts = new List<string>() { "shoppinglist.azurefd.net", "shoppinglist.apps.hueppauff.com", "weshoppinglistweb.azurewebsites.net" };
-            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

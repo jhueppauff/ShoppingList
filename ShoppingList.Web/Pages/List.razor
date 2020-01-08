@@ -28,7 +28,7 @@ else
             <tr>
                 <th>Name</th>
                 <th>Amount</th>
-                <th>Done</th>
+                <th class="text-center">Done</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -40,11 +40,11 @@ else
                     <td>@item.Amount @item.Unit</td>
                     @if (item.Done)
                     {
-                        <td><input type="checkbox" checked="checked" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
+                        <td class="text-center"><input type="checkbox" checked="checked" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                     }
                     else
                     {
-                        <td><input type="checkbox" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
+                        <td class="text-center"><input type="checkbox" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                     }
                     <td>
                         <button class="btn btn-xs btn-danger" @onclick="@(e => DeleteItemAsync(item.RowKey))">

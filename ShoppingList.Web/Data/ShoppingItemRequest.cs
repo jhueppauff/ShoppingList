@@ -13,5 +13,7 @@
         public string Id { get; set; }
 
         public bool Completed { get; set; }
+
+        public string Unit { get; set; }
     }
 }

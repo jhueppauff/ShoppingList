@@ -136,7 +136,8 @@ namespace ShoppingList.Function
                 Amount = Convert.ToDouble(shoppingListItem.Amount),
                 Created = DateTime.UtcNow,
                 Modified = DateTime.UtcNow,
-                Done = false
+                Done = false,
+                Unit = shoppingListItem.Unit.ToString()
             };
         }
 

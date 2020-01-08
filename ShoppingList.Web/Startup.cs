@@ -77,11 +77,14 @@ namespace ShoppingList
             });
 
 
-            services.AddSignalR().AddAzureSignalR(options =>
+            if (!string.IsNullOrWhiteSpace(Configuration.GetSection("Azure:SignalR:ConnectionString").Value))
             {
-                options.ServerStickyMode =
-                    Microsoft.Azure.SignalR.ServerStickyMode.Required;
-            });
+                services.AddSignalR().AddAzureSignalR(options =>
+                {
+                    options.ServerStickyMode =
+                        Microsoft.Azure.SignalR.ServerStickyMode.Required;
+                });
+            }
 
             services.AddRazorPages();
             services.AddServerSideBlazor();

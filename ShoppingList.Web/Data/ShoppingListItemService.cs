@@ -17,14 +17,15 @@ namespace ShoppingList.Data
             this.configuration = configuration;
         }
 
-        public async Task CreateShoppingListItemAsync(string owner, string listName, string itemName, double amout)
+        public async Task CreateShoppingListItemAsync(string owner, string listName, string itemName, double amout, string unit)
         {
             ShoppingItemRequest shoppingItemRequest = new ShoppingItemRequest()
             {
                 Owner = owner,
                 ListName = listName,
                 Amount = amout,
-                Name = itemName
+                Name = itemName,
+                Unit = unit
             };
 
             RestClient client = new RestClient(configuration.GetSection("FunctionHost").Value);

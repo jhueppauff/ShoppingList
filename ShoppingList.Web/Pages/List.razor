@@ -23,7 +23,7 @@ else if (shoppingListItems.Count == 0)
 }
 else
 {
-    <table class="table">
+    <table class="table table-striped table-hover">
         <thead>
             <tr>
                 <th>Name</th>
@@ -37,35 +37,64 @@ else
             {
                 <tr>
                     <td>@item.Name</td>
-                    <td>@item.Amount</td>
+                    <td>@item.Amount @item.Unit</td>
                     @if (item.Done)
                     {
-                        <td><input type="checkbox" checked="checked" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
+                        <td><input type="checkbox" checked="checked" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                     }
                     else
                     {
-                        <td><input type="checkbox" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
+                        <td><input type="checkbox" class="form-check-input" value=@item.Done @onchange="@(e => CheckItemAsync(item.RowKey, !item.Done))" /></td>
                     }
-                    <td><button @onclick="@(e => DeleteItemAsync(item.RowKey))">Delete</button></td>
+                    <td>
+                        <button class="btn btn-xs btn-danger" @onclick="@(e => DeleteItemAsync(item.RowKey))">
+                            <span class="fas fa-trash"></span>
+                        </button>
+                    </td>
                 </tr>
             }
         </tbody>
     </table>
+    <br />
 }
 
-<div>
-    <input type="text" @bind="itemName" />
-    <input type="number" @bind="amount" />
-    <button @onclick="OnClickItemCreateAsync">Save</button>
-</div>
+<form class="form-horizontal col-md-4">
+    <fieldset>
+        <legend>Add new Item</legend>
+        <div class="form-group">
+            <input class="form-control" id="itemname" placeholder="Corn" type="text" @bind="ItemName" />
+        </div>
+        <div class="form-group">
+            <div class="input-group mb-3">
+                <div class="input-group-append">
+                    <input class="form-control" id="amount" type="number" @bind="Amount" />
+                    <input @bind="Unit" name="unit" list="units" placeholder="Gramm" class="form-control">
+                    <datalist id="units">
+                        <option value="Gramm">Gramm</option>
+                        <option value="Kilogramm">Kilogramm</option>
+                        <option value="Liter">Liter</option>
+                        <option value="Pice(s)">Pice(s)</option>
+                        <option value="Bottles">Bottles</option>
+                        <option value="Cans">Cans</option>
+                    </datalist>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-xs btn-success" @onclick="OnClickItemCreateAsync"><span class="fas fa-plus"></span> Save</button>
+        </div>
+    </fieldset>
+</form>
+
 
 @code {
     [CascadingParameter]
     private Task<AuthenticationState> authenticationStateTask { get; set; }
 
-    public string itemName { get; set; }
-    public int amount { get; set; }
-    private string user;
+    public string ItemName { get; set; }
+    public int Amount { get; set; }
+    public string User;
+    public string Unit { get; set; }
 
     private List<Shared.Model.ShoppingListItem> shoppingListItems;
 
@@ -75,14 +104,14 @@ else
 
         if (configurationService.AuthenticationMode() == "AAD")
         {
-            user = authState.User.Identity.Name;
+            User = authState.User.Identity.Name;
         }
         else if (configurationService.AuthenticationMode() == "B2C")
         {
-            user = authState.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
+            User = authState.User.FindFirst("http://schemas.microsoft.com/identity/claims/objectidentifier").Value;
         }
 
-        shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(user, Name).ConfigureAwait(false);
+        shoppingListItems = await shoppingListItemService.GetShoppingListItemsAsync(User, Name).ConfigureAwait(false);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -93,24 +122,24 @@ else
 
     private async Task OnClickItemCreateAsync()
     {
-        await shoppingListItemService.CreateShoppingListItemAsync(user, Name, itemName, Convert.ToDouble(amount)).ConfigureAwait(false);
+        await shoppingListItemService.CreateShoppingListItemAsync(User, Name, ItemName, Convert.ToDouble(Amount), Unit).ConfigureAwait(false);
 
-        itemName = string.Empty;
-        amount = 0;
+        ItemName = string.Empty;
+        Amount = 0;
 
         await OnInitializedAsync().ConfigureAwait(false); ;
     }
 
     private async Task CheckItemAsync(string itemId, bool completed)
     {
-        await shoppingListItemService.CompleteItemAsync(user, Name, itemId, completed).ConfigureAwait(false);
+        await shoppingListItemService.CompleteItemAsync(User, Name, itemId, completed).ConfigureAwait(false);
 
         shoppingListItems.SingleOrDefault(e => e.RowKey == itemId).Done = completed;
     }
 
     private async Task DeleteItemAsync(string itemId)
     {
-        await shoppingListItemService.DeleteItemAsync(user, Name, itemId).ConfigureAwait(false);
+        await shoppingListItemService.DeleteItemAsync(User, Name, itemId).ConfigureAwait(false);
 
         var item = shoppingListItems.FirstOrDefault(e => e.RowKey == itemId);
         shoppingListItems.Remove(item);

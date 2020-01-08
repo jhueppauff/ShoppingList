@@ -26,6 +26,8 @@ namespace ShoppingList.Shared.Model
 
         public double Amount { get; set; }
 
+        public string Unit { get; set; }
+
         public DateTime Created { get; set; }
 
         public DateTime Modified { get; set; }

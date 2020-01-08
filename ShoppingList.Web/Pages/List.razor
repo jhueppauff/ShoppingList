@@ -122,10 +122,16 @@ else
 
     private async Task OnClickItemCreateAsync()
     {
+        if (Unit == string.Empty)
+        {
+            Unit = "Gramm";
+        }
+
         await shoppingListItemService.CreateShoppingListItemAsync(User, Name, ItemName, Convert.ToDouble(Amount), Unit).ConfigureAwait(false);
 
         ItemName = string.Empty;
         Amount = 0;
+        Unit = string.Empty;
 
         await OnInitializedAsync().ConfigureAwait(false); ;
     }

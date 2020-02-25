@@ -3,16 +3,18 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList", "ShoppingList.Web\ShoppingList.csproj", "{7D5CFCBD-F0D1-46D0-8F3F-D90C67C2614D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7558}") = "ShoppingList", "ShoppingList.Web\ShoppingList.csproj", "{7D5CFCBD-F0D1-46D0-8F3F-D90C67C2614D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList.Function", "ShoppingList.Function\ShoppingList.Function.csproj", "{EAA8A916-E695-47EF-96C6-95F7F63FF20A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ShoppingList.Function", "ShoppingList.Function\ShoppingList.Function.csproj", "{EAA8A916-E695-47EF-96C6-95F7F63FF20A}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A0ADEB01-9AC7-45FB-9ED1-6684B514493F}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList.Shared", "ShoppingList.Shared\ShoppingList.Shared.csproj", "{A1BE8373-85A3-4AAF-B825-D15AACB27244}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7557}") = "ShoppingList.Shared", "ShoppingList.Shared\ShoppingList.Shared.csproj", "{A1BE8373-85A3-4AAF-B825-D15AACB27244}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ShoppingList.SPA", "ShoppingList.SPA\ShoppingList.SPA.csproj", "{4ABDE9CB-D518-4354-9286-67829FA4D842}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +34,10 @@ Global
 		{A1BE8373-85A3-4AAF-B825-D15AACB27244}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1BE8373-85A3-4AAF-B825-D15AACB27244}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1BE8373-85A3-4AAF-B825-D15AACB27244}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4ABDE9CB-D518-4354-9286-67829FA4D842}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4ABDE9CB-D518-4354-9286-67829FA4D842}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4ABDE9CB-D518-4354-9286-67829FA4D842}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4ABDE9CB-D518-4354-9286-67829FA4D842}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

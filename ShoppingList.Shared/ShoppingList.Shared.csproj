@@ -1,11 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>netcoreapp3.0</TargetFramework>
+    <ProjectGuid>DBAFC3B1-B935-46B6-B840-3C806E65F3A1</ProjectGuid>
   </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="WindowsAzure.Storage" Version="9.3.1" />
   </ItemGroup>
-  <ProjectGuid>9A19103F-16F7-4668-BE54-9A1E7A4F7557</ProjectGuid>
 </Project>

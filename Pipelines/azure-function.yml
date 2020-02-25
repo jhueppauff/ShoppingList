@@ -37,6 +37,15 @@ stages:
       vmImage: $(vmImageName)
 
     steps:
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: 'SonarCloud'
+        organization: 'jhueppauff-github'
+        scannerMode: 'MSBuild'
+        projectKey: 'shoppinglist'
+        projectName: 'ShoppingList'
+        extraProperties: '/o:jhueppauff-github'
+
     - task: DotNetCoreCLI@2
       displayName: Build
       inputs:
@@ -44,6 +53,11 @@ stages:
         projects: |
           $(workingDirectory)/*.csproj
         arguments: --output $(System.DefaultWorkingDirectory)/publish_output --configuration Release
+
+    - task: SonarCloudAnalyze@1
+    - task: SonarCloudPublish@1
+      inputs:
+        pollingTimeoutSec: '300'
 
     - task: ArchiveFiles@2
       displayName: 'Archive files'

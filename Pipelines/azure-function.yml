@@ -58,7 +58,8 @@ stages:
     - task: SonarCloudPublish@1
       inputs:
         pollingTimeoutSec: '300'
-
+    - task: WhiteSource Bolt@20
+    
     - task: ArchiveFiles@2
       displayName: 'Archive files'
       inputs:

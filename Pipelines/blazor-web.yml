@@ -1,4 +1,4 @@
-# ASP.NET Core
+ # ASP.NET Core
 # Build and test ASP.NET Core projects targeting .NET Core.
 # Add steps that run tests, create a NuGet package, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
@@ -39,14 +39,6 @@ stages:
       inputs:
         version:  3.1.100
         
-    - task: SonarCloudPrepare@1
-      inputs:
-        SonarCloud: 'SonarCloud'
-        organization: 'jhueppauff-github'
-        scannerMode: 'MSBuild'
-        projectKey: 'shoppinglist'
-        projectName: 'ShoppingList'
-        extraProperties: '/o:jhueppauff-github'
     - task: DotNetCoreCli@2
       displayName: restore
       inputs:
@@ -64,8 +56,6 @@ stages:
 
     - task: WhiteSource Bolt@20
     
-    - task: SonarCloudAnalyze@1
-    - task: SonarCloudPublish@1
       inputs:
         pollingTimeoutSec: '300'
     - task: DotNetCoreCLI@2
